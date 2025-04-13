@@ -42,5 +42,5 @@ const deleteClient=async(req,res)=>{
         res.status(500).json({ message: err.message });
       }
 }
-
+//comment
 module.exports={addClient,upload,getClient,deleteClient}
