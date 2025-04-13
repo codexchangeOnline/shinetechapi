@@ -93,4 +93,5 @@ const  openingDetails=async(req,res)=>{
         res.status(500).json({ message: 'Error deleting job', error: error.message });
     }
   }
+  //line break
 module.exports={careerCreate,addOpening,openingDetails,deleteOpening,upload}
