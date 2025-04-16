@@ -1,6 +1,7 @@
 const Gallery=require('../models/galleryModel')
 const multer = require('multer');
 const path = require('path');
+const fs = require('fs');
 const storage = multer.diskStorage({
     destination: './uploads/', // Save images in 'uploads' folder
     filename: (req, file, cb) => {
@@ -49,12 +50,38 @@ const displayGallery=async(req,res)=>{
     }
 
 }
-const deleteGallery=async(req,res)=>{
-    try {
-        const result = await Gallery.findByIdAndDelete(req.params.id);
-        res.json({ success: true, message: 'Deleted', result });
-      } catch (err) {
-        res.status(500).json({ message: err.message });
-      }
-}
+const deleteGallery = async (req, res) => {
+  try {
+    const result = await Gallery.findByIdAndDelete(req.params.id);
+
+    if (!result) {
+      return res.status(404).json({ success: false, message: 'Gallery item not found' });
+    }
+
+    // If result.image is an array
+    if (Array.isArray(result.images)) {
+      result.images.forEach((img) => {
+        const filePath = path.join(__dirname, '../uploads', path.basename(img));
+        fs.unlink(filePath, (err) => {
+          if (err) {
+            console.error(`Error deleting file ${img}:`, err.message);
+          }
+        });
+      });
+    } else {
+      // Single image string
+      const filePath = path.join(__dirname, '../uploads', path.basename(result.image));
+      fs.unlink(filePath, (err) => {
+        if (err) {
+          console.error(`Error deleting file:`, err.message);
+        }
+      });
+    }
+
+    res.json({ success: true, message: 'Deleted', result });
+  } catch (err) {
+    console.error('Delete error:', err.message);
+    res.status(500).json({ message: err.message });
+  }
+};
 module.exports={uploadGallery,upload,displayGallery,deleteGallery}

@@ -5,7 +5,8 @@ const UploadReport=require('../models/uploadReportModel')
 const User = require('../models/userModel')
 const mongoose=require('mongoose');
 const sendMail = require('../emailService');
-
+require('dotenv').config();
+const fs = require('fs');
 const bcrypt = require('bcrypt');
 // const sendEmail=require('../emailService')
 const storage = multer.diskStorage({
@@ -74,7 +75,7 @@ console.log("originalPassword",user.originalPassword);
                 <p><strong>Username:</strong> ${user.username}</p>
                 <p><strong>Password:</strong> ${user.originalPassword} (Use your original password)</p>
                 <p>You can log in to view your report.</p>
-                <p><a href="http://localhost:4200/login">Click here to login</a></p>
+                <p><a href="${process.env.FRONTEND_BASE_URL}/login">Click here to login</a></p>
                 
                 <p>Thank you!</p>
             `;
@@ -137,7 +138,40 @@ console.log("originalPassword",user.originalPassword);
         res.status(500).json({ message: 'Error fetching reports' });
     }
 });
-  
+
+const deleteReport = async (req, res) => {
+  try {
+    const reportId = req.params.id;
+
+    // Find the report
+    const report = await UploadReport.findById(reportId);
+
+    if (!report) {
+      return res.status(404).json({ message: "Report not found" });
+    }
+
+    // Delete the file from the folder
+    const filePath = path.join(__dirname, '..', report.filePath); // assuming filePath is stored like: 'uploads/filename.pdf'
+    
+    fs.unlink(filePath, async (err) => {
+      if (err && err.code !== 'ENOENT') {
+        // Don't fail if file not found, but log error
+        console.error("Error deleting file:", err);
+        return res.status(500).json({ message: 'Failed to delete file from folder' });
+      }
+
+      // Delete document from DB
+      await UploadReport.findByIdAndDelete(reportId);
+
+      res.json({ success: true, message: "Report and file deleted successfully" });
+    });
+
+  } catch (error) {
+    console.error('Delete report error:', error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
 
 
-  module.exports = {uploadReport,viewReport};
+
+  module.exports = {uploadReport,viewReport,deleteReport};

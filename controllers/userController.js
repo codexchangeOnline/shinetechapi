@@ -149,7 +149,7 @@ const forgetPassword=async(req,res)=>{
     await user.save();
 
     // ✅ Create reset password link
-    const resetLink = `http://localhost:4200/resetpassword?resetCode=${resetToken}`;
+    const resetLink = `${process.env.FRONTEND_BASE_URL}/resetpassword?resetCode=${resetToken}`;
 
     // ✅ Send email
     const emailResponse = await sendResetEmail(user.email, resetLink);
