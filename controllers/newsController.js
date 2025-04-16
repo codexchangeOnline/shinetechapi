@@ -1,4 +1,5 @@
 const multer = require('multer');
+const fs = require('fs');
 const path = require('path');
 const News=require('../models/newsModel')
 
@@ -53,29 +54,46 @@ const newsById=async(req,res)=>{
 
      
 }
-const deleteNews=async(req,res)=>{
-    try {
-        const deletedNews = await News.findByIdAndDelete(req.params.id);
-    
-        if (!deletedNews) {
-          return res.status(404).json({
-            success: false,
-            message: 'News not found or already deleted.',
-          });
+
+const deleteNews = async (req, res) => {
+  try {
+    const deletedNews = await News.findByIdAndDelete(req.params.id);
+
+    if (!deletedNews) {
+      return res.status(404).json({
+        success: false,
+        message: 'News not found or already deleted.',
+      });
+    }
+
+    // Image file deletion (non-blocking, don't send response from here)
+    if (deletedNews.image) {
+      const imageName = deletedNews.image.replace(/^\/uploads\//, ''); // if stored like "/uploads/xyz.png"
+      const imagePath = path.join(__dirname, '..', 'uploads', imageName); // just one 'uploads'
+
+      fs.unlink(imagePath, (err) => {
+        if (err) {
+          console.error('Error deleting image:', err.message);
+        } else {
+          console.log('Image deleted successfully:', imagePath);
         }
-    
-        res.status(200).json({
-          success: true,
-          message: 'News deleted successfully.',
-          data: deletedNews,
-        });
-      } catch (error) {
-        console.error('Error deleting news:', error);
-        res.status(500).json({
-          success: false,
-          message: 'Failed to delete news.',
-          error: error.message,
-        });
-      }
+      });
+    }
+
+    // ✅ Send only one response
+    res.status(200).json({
+      success: true,
+      message: 'News deleted successfully.',
+      data: deletedNews,
+    });
+
+  } catch (error) {
+    console.error('Error deleting news:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to delete news.',
+      error: error.message,
+    });
   }
+};
 module.exports={addNews,upload,newsDetail,newsById,deleteNews}

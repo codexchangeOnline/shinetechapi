@@ -17,7 +17,7 @@ const clientRoutes=require('./route/clientRoute')
 const enquiry=require('./route/enquiryRoute')
 const errorHandler = require('./middleware/errorHandler');
 app.use(cors({
-    origin: 'http://localhost:4200',      // Allow only the frontend on localhost:4200
+    origin: process.env.FRONTEND_BASE_URL,      // Allow only the frontend on localhost:4200
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],  // Allow the specified HTTP methods
     allowedHeaders: ['Content-Type', 'Authorization'],    // Allow specific headers
   }));
