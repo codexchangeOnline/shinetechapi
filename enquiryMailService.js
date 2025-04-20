@@ -27,7 +27,7 @@ const sendEnquiryEmail = async (enquiryData) => {
       <h3>Enquiry Details</h3>
       <p><strong>Name:</strong> ${name}</p>
       <p><strong>Email:</strong> ${email}</p>
-      <p><strong>Email:</strong> ${phone}</p>
+      <p><strong>Phone:</strong> ${phone}</p>
       <p><strong>Service Type:</strong> ${selectedService}</p>
       <p><strong>Message:</strong> ${message}</p>
     `
