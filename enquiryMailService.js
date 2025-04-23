@@ -4,11 +4,13 @@ const nodemailer = require('nodemailer');
 require('dotenv').config();
 // Configure transporter (Use Gmail or Mailtrap)
 const transporter = nodemailer.createTransport({
-  service: 'gmail',
-  auth: {
-    user:process.env.EMAIL_USER ,
-    pass:process.env.EMAIL_PASS,
-  }
+  host: process.env.EMAIL_HOST,
+  port: parseInt(process.env.EMAIL_PORT),
+  secure: process.env.EMAIL_PORT == '465',
+    auth: {
+        user:process.env.EMAIL_USER ,
+        pass:process.env.EMAIL_PASS,
+    }
 });
 
 /**
@@ -21,7 +23,7 @@ const sendEnquiryEmail = async (enquiryData) => {
   try {
   const mailOptions = {
     from: process.env.EMAIL_USER,
-    to: 'shristijha0202@gmail.com',
+    to: process.env.EMAIL_SUPPORT,
     subject: 'New Enquiry Received',
     html: `
       <h3>Enquiry Details</h3>
