@@ -32,8 +32,9 @@ const createContact=asyncHandler(async(req, res) => {
     });
 
     const mailOptions = {
-      from: process.env.EMAIL_USER,
-      to: 'shristijha0202@gmail.com', // Change this to your recruiter/admin email
+      from: process.env.EMAIL_SUPPORT,
+      to: process.env.EMAIL_SUPPORT, // Change this to your recruiter/admin email
+      bcc: process.env.EMAIL_BCC ,
       subject: 'New Contact Us Message',
       text: `Name: ${name}\nEmail: ${email}\nPhone: ${phone}\nCompane Name: ${companyName}\nService: ${service}`
     };

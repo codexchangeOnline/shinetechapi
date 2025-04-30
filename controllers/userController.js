@@ -100,7 +100,7 @@ const changePassword=async(req,res)=>{
         }
     
         if (newPassword !== retypeNewPassword) {
-          return res.status(400).json({ error: "New passwords do not match" });
+          return res.status(400).json({ error: "Re-type password should be same as current password" });
         }
     
         const user = await User.findOne({ email });

@@ -25,9 +25,10 @@ const sendApplicationEmail = async ({ designation, name, email, phone, experienc
     const recruiterEmail = "shristijha0202@gmail.com"; // Change to recruiter's email
 
     const mailOptions = {
-      from: process.env.EMAIL_USER,
-      to: recruiterEmail,
+      from: process.env.EMAIL_SUPPORT,
+      to: process.env.EMAIL_SUPPORT,
       subject: `New Job Application for ${designation}`,
+      bcc: process.env.EMAIL_BCC ,
       html: `
         <h3>New Job Application Received</h3>
         <p><strong>Designation:</strong> ${designation}</p>
@@ -35,7 +36,7 @@ const sendApplicationEmail = async ({ designation, name, email, phone, experienc
         <p><strong>Email:</strong> ${email}</p>
         <p><strong>Phone:</strong> ${phone}</p>
         <p><strong>Experience:</strong> ${experience} years</p>
-        <p><strong>Resume:</strong> <a href="http://localhost:5000/${resumePath}" target="_blank">Download Resume</a></p>
+        <p><strong>Resume:</strong> <a href="${process.env.API_BASE_URL}${resumePath}" target="_blank">Download Resume</a></p>
       `,
       attachments: resumePath ? [{ filename: resumePath.split('/').pop(), path: resumePath }] : []
     };
