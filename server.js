@@ -15,6 +15,7 @@ const uploadGallery=require('./route/galleryRoute')
 const newsRoutes=require('./route/newsRoute')
 const clientRoutes=require('./route/clientRoute')
 const enquiry=require('./route/enquiryRoute')
+const certificationRoutes=require('./route/certificationRoute')
 const errorHandler = require('./middleware/errorHandler');
 app.use(cors({
     origin: process.env.FRONTEND_BASE_URL,      // Allow only the frontend on localhost:4200
@@ -32,6 +33,7 @@ app.use("/api/enquiry",enquiry)
 app.use("/api/user",userRoutes)
 app.use("/api/uploadReport",uploadReport)
 app.use("/api/gallery",uploadGallery)
+app.use("/api/certification",certificationRoutes)
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 app.listen(port,()=>{
     console.log("Server is running");

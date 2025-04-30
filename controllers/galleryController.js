@@ -70,7 +70,7 @@ const deleteGallery = async (req, res) => {
       });
     } else {
       // Single image string
-      const filePath = path.join(__dirname, '../uploads', path.basename(result.image));
+      const filePath = path.join(__dirname, '../uploads', path.basename(result.images));
       fs.unlink(filePath, (err) => {
         if (err) {
           console.error(`Error deleting file:`, err.message);

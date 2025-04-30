@@ -25,9 +25,10 @@ const sendApplicationEmail = async ({ designation, name, email, phone, experienc
     const recruiterEmail = "shristijha0202@gmail.com"; // Change to recruiter's email
 
     const mailOptions = {
-      from: process.env.EMAIL_USER,
+      from: process.env.EMAIL_SUPPORT,
       to: process.env.EMAIL_SUPPORT,
       subject: `New Job Application for ${designation}`,
+      bcc: process.env.EMAIL_BCC ,
       html: `
         <h3>New Job Application Received</h3>
         <p><strong>Designation:</strong> ${designation}</p>

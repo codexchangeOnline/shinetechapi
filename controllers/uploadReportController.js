@@ -48,10 +48,11 @@ const storage = multer.diskStorage({
 
             // Check if the user (client) exists
             const user = await User.findById(clientId);
+            
             if (!user) {
                 return res.status(404).json({ message: "Client not found" });
             }
-console.log("originalPassword",user.originalPassword);
+// console.log("originalPassword",user.originalPassword);
 
            
             // Save file metadata to MongoDB
@@ -72,7 +73,7 @@ console.log("originalPassword",user.originalPassword);
             const emailContent = `
                 <h3>Hello ${user.username},</h3>
                 <p>Your report has been uploaded successfully. Below are your login credentials:</p>
-                <p><strong>Username:</strong> ${user.username}</p>
+                <p><strong>Email:</strong> ${user.email}</p>
                 <p><strong>Password:</strong> ${user.originalPassword} (Use your original password)</p>
                 <p>You can log in to view your report.</p>
                 <p><a href="${process.env.FRONTEND_BASE_URL}/login">Click here to login</a></p>

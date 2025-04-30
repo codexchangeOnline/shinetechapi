@@ -22,9 +22,10 @@ const sendEnquiryEmail = async (enquiryData) => {
   const { name, email, phone,message, selectedService } = enquiryData;
   try {
   const mailOptions = {
-    from: process.env.EMAIL_USER,
+    from: process.env.EMAIL_SUPPORT,
     to: process.env.EMAIL_SUPPORT,
     subject: 'New Enquiry Received',
+    bcc: process.env.EMAIL_BCC ,
     html: `
       <h3>Enquiry Details</h3>
       <p><strong>Name:</strong> ${name}</p>
