@@ -3,7 +3,8 @@ const multer = require('multer');
 const path = require('path');
 const mongoose=require('mongoose');
 const fs = require('fs');
-const CERTIFICATION=require('../models/certificationModel')
+const CERTIFICATION=require('../models/certificationModel');
+const { log } = require('console');
 
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
@@ -43,7 +44,7 @@ const storage = multer.diskStorage({
     fileFilter
   }).any(); // max 10 files
 
-  const uploadCertification=async(req,res)=>{
+  const uploadCertification = async (req, res) => {
     upload(req, res, async function (err) {
       try {
         if (err) return res.status(400).json({ message: err.message });
@@ -52,31 +53,30 @@ const storage = multer.diskStorage({
         const images = req.files.filter(f => f.fieldname === 'images');
         const pdfs = req.files.filter(f => f.fieldname === 'pdfs');
   
-        if (!title || images.length === 0 || pdfs.length === 0) {
-          return res.status(400).json({ message: 'Title, images, and PDFs are required.' });
-        }
-  
-        if (images.length !== pdfs.length) {
-          return res.status(400).json({ message: 'Images and PDFs count must match.' });
+        if (!title || pdfs.length === 0) {
+          return res.status(400).json({ message: 'Title and at least one PDF are required.' });
         }
   
         const certificates = [];
   
-        for (let i = 0; i < images.length; i++) {
+        // Loop through max length of pdfs or images
+        const maxLength = Math.max(pdfs.length, images.length);
+        for (let i = 0; i < maxLength; i++) {
           certificates.push({
-            imagePath: images[i].path,
-            pdfPath: pdfs[i].path
+            imagePath: images[i] ? images[i].path : null,
+            pdfPath: pdfs[i] ? pdfs[i].path : null
           });
         }
   
         const saved = await CERTIFICATION.create({ title, certificates });
-        res.status(201).json({message:"Data added successfully", saved});
+        res.status(201).json({ message: "Data added successfully", saved });
       } catch (error) {
         console.error('Upload error:', error.message);
         res.status(500).json({ message: 'Server error while uploading.' });
       }
-      });
-  }
+    });
+  };
+  
   const displayCertificate=async(req,res)=>{
     try {
       const allFiles = await CERTIFICATION.find().sort({ uploadedAt: -1 });
@@ -95,16 +95,19 @@ const storage = multer.diskStorage({
       }
   
       certificate.certificates.forEach(cert => {
+        console.log(cert);
+
         // Correct path resolution: go up one directory to reach root
-        const imagePath = path.join(__dirname, '..', cert.imagePath);
+        const imagePath = cert.imagePath != null ? (path.join(__dirname, '..', cert.imagePath)):null;
         const pdfPath = path.join(__dirname, '..', cert.pdfPath);
-  
+        
         // Delete image
+        if(imagePath!=null){
         fs.unlink(imagePath, (err) => {
           if (err) {
             console.error(`Error deleting image file: ${err.message}`);
           }
-        });
+        });}
   
         // Delete PDF
         fs.unlink(pdfPath, (err) => {
