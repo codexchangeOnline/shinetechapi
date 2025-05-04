@@ -7,6 +7,10 @@ const fileSchema = new mongoose.Schema({
         required:true,
         ref:"User"
     },
+    reportNo:{
+      type:String,
+      required:true
+    },
   originalName: {
     type: String,
     required: true,

@@ -41,7 +41,7 @@ const storage = multer.diskStorage({
         }
 
         try {
-            const { clientId } = req.body;
+            const { clientId, reportNo } = req.body;
             if (!clientId) {
                 return res.status(400).json({ message: "Client ID is required" });
             }
@@ -58,6 +58,7 @@ const storage = multer.diskStorage({
             // Save file metadata to MongoDB
             const uploadedFiles = req.files.map((file) => ({
                 clientId: clientId,
+                reportNo:reportNo,
                 originalName: file.originalname,
                 uploadedName: file.filename,
                 filePath: file.path,
@@ -116,10 +117,10 @@ const storage = multer.diskStorage({
         let reports;
         if (user.roleName.toLowerCase() === 'admin') {
             // Admin can view all reports
-            reports = await UploadReport.find().populate('clientId', 'username');
+            reports = await UploadReport.find().sort({ uploadedAt: -1 }).populate('clientId', 'username');
         } else {
             // Clients can only see their own reports
-            reports = await UploadReport.find({ clientId: user._id }).populate('clientId', 'username');
+            reports = await UploadReport.find({ clientId: user._id }).sort({ uploadedAt: -1 }).populate('clientId', 'username');
         }
 
         if (!reports || reports.length === 0) {
@@ -129,9 +130,11 @@ const storage = multer.diskStorage({
         res.json({
             reports: reports.map(report => ({
                 id: report._id,
+                reportNo:report.reportNo,
                 fileName: report.uploadedName, // ✅ Corrected field name
                 filePath: `/uploads/${report.uploadedName}`,
-                clientName: report.clientId ? report.clientId.username : 'Unknown'
+                clientName: report.clientId ? report.clientId.username : 'Unknown',
+                updateAt:report.uploadedAt
             }))
         });
     } catch (error) {
