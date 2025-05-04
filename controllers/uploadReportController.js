@@ -179,8 +179,36 @@ const deleteReport = async (req, res) => {
 };
 
 // Run every 5 minutes
-cron.schedule('*/5 * * * *', async () => {
-  const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000); // 7 days
+// cron.schedule('*/5 * * * *', async () => {
+//   const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000); // 7 days
+
+//   try {
+//     const reportsToDelete = await UploadReport.find({ uploadedAt: { $lt: sevenDaysAgo } });
+
+//     for (const report of reportsToDelete) {
+//       const filePath = path.join(__dirname, '..', report.filePath);
+
+//       fs.unlink(filePath, async (err) => {
+//         if (err && err.code !== 'ENOENT') {
+//           console.error(`Failed to delete file for report ${report._id}:`, err);
+//         } else {
+//           console.log(`File deleted: ${filePath}`);
+//         }
+
+//         // Delete from DB regardless of file deletion success
+//         await UploadReport.findByIdAndDelete(report._id);
+//         console.log(`Report deleted: ${report._id}`);
+//       });
+//     }
+//   } catch (err) {
+//     console.error('Auto delete error:', err);
+//   }
+// });
+
+
+// Run once daily at midnight
+cron.schedule('0 0 * * *', async () => {
+  const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000); // 7 days ago
 
   try {
     const reportsToDelete = await UploadReport.find({ uploadedAt: { $lt: sevenDaysAgo } });
@@ -204,8 +232,6 @@ cron.schedule('*/5 * * * *', async () => {
     console.error('Auto delete error:', err);
   }
 });
-
-
 
 
   module.exports = {uploadReport,viewReport,deleteReport};
