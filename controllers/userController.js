@@ -1,3 +1,4 @@
+const UploadReport = require('../models/uploadReportModel'); // Adjust the path if needed
 const asyncHandler=require('express-async-handler')
 const User = require('../models/userModel')
 const bcrypt = require("bcryptjs");
@@ -89,6 +90,36 @@ const getUser=asyncHandler(async(req, res) => {
         res.status(500).json({ message: 'Error fetching clients' });
       }
 })
+
+
+const deleteUser = asyncHandler(async (req, res) => {
+  try {
+    const clientId = req.params.id;
+
+    // Check if clientId is used in UploadReport
+    const reportExists = await UploadReport.findOne({ clientId });
+
+    if (reportExists) {
+      return res.status(400).json({
+        message: 'Cannot delete client. Report(s) exist for this client.',
+      });
+    }
+
+    // Proceed to delete if no reports found
+    const client = await User.findByIdAndDelete(clientId);
+
+    if (!client) {
+      return res.status(404).json({ message: 'Client not found' });
+    }
+
+    res.status(200).json({ message: 'Client deleted successfully' });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Error deleting client' });
+  }
+});
+
+  
 
 
 const changePassword=async(req,res)=>{
@@ -201,4 +232,4 @@ const resetPassword = async (req, res) => {
 }
 };
 
-module.exports={registerUser,loginUser,currentUser,getUser,changePassword,forgetPassword,resetPassword}
+module.exports={registerUser,loginUser,currentUser,getUser,deleteUser,changePassword,forgetPassword,resetPassword}
