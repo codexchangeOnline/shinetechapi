@@ -68,21 +68,29 @@ const storage = multer.diskStorage({
                 fileSize: file.size,
                 uploadedAt: new Date(),
             }));
-
+ 
+            let credentialsSection = '';
+            let SavedReports =await UploadReport.find({ clientId: clientId }).sort({ uploadedAt: -1 }).populate('clientId', 'username');
             // Insert file metadata into MongoDB
             const savedFiles = await UploadReport.insertMany(uploadedFiles);
 
             // Email content
-            const emailContent = `
-                <h3>Hello ${user.username},</h3>
-                <p>Your report has been uploaded successfully. Below are your login credentials:</p>
+            if (!SavedReports || SavedReports.length === 0){
+              credentialsSection = `
                 <p><strong>Email:</strong> ${user.email}</p>
                 <p><strong>Password:</strong> ${user.originalPassword} (Use your original password)</p>
-                <p>You can log in to view your report.</p>
-                <p><a href="${process.env.FRONTEND_BASE_URL}/login">Click here to login</a></p>
-                
-                <p>Thank you!</p>
+              `;
+            }
+            
+            const emailContent = `
+              <h3>Hello ${user.username},</h3>
+              <p>Your report has been uploaded successfully.</p>
+              ${credentialsSection}
+              <p>You can log in to view your report.</p>
+              <p><a href="${process.env.FRONTEND_BASE_URL}/login">Click here to login</a></p>
+              <p>Thank you!</p>
             `;
+            
 
             // Send email
             await sendMail(user.email, "Your Report is Uploaded", emailContent);
