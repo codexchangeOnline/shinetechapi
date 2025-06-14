@@ -86,7 +86,7 @@ const storage = multer.diskStorage({
               <h3>Hello ${user.username},</h3>
               <p>Your report has been uploaded successfully.</p>
               ${credentialsSection}
-              <p>You can log in to view your report.</p>
+              <p>You can login to view your report.</p>
               <p><a href="${process.env.FRONTEND_BASE_URL}/login">Click here to login</a></p>
               <p>Thank you!</p>
             `;
