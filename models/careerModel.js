@@ -25,6 +25,10 @@ const careerSchema=mongoose.Schema({
         type:String,
         required:[true, "Please add the contact number"]
     },
+    appName: {
+    type: String,
+    default: 'stns'  // or whatever default you want
+  },
 },{
     timestamps:true,
 })

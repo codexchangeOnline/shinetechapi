@@ -35,6 +35,10 @@ const fileSchema = new mongoose.Schema({
     type: Date,
     default: Date.now,
   },
+    appName: {
+    type: String,
+    default: 'stns'  // or whatever default you want
+  },
 });
 
 module.exports = mongoose.model('UPLOADREPORT', fileSchema);
