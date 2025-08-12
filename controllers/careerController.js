@@ -30,19 +30,19 @@ const upload = multer({
 const careerCreate=asyncHandler(async(req, res) => {
     try{
     console.log("data",req.body);
-   const {designation,name,email,resume,experience,phone}=req.body
+   const {designation,name,email,resume,experience,phone,appName}=req.body
    const resumePath = req.file ? req.file.path : null;
     if(!designation||!name || !email || !phone || !experience ||!resumePath){
         res.status(400)
         throw new Error("All field are mandatory")
     }
     const career=await Career.create({
-        designation,name,email,resume: resumePath,experience,phone
+        designation,name,email,resume: resumePath,experience,phone,appName
     })
     await career.save();
 
     // **Send Email to Recruiter**
-    await sendApplicationEmail({ designation, name, email, phone, experience, resumePath });
+    await sendApplicationEmail({ designation, name, email, phone, experience, resumePath});
 
     res.status(201).json({ message: 'Application submitted successfully & email sent!' });
 
@@ -54,13 +54,13 @@ const careerCreate=asyncHandler(async(req, res) => {
 const addOpening=async(req,res)=>{
 
     try {
-        const { designation, experience, location } = req.body;
+        const { designation, experience, location, appName } = req.body;
         
         if (!designation || !experience || !location) {
           return res.status(400).json({ message: "All fields are required" });
         }
     
-        const newCareer = new CareerOpening({ designation, experience, location });
+        const newCareer = new CareerOpening({ designation, experience, location, appName});
         await newCareer.save();
     
         res.status(201).json({ message: "Career opportunity added successfully", career: newCareer });
@@ -72,7 +72,7 @@ const addOpening=async(req,res)=>{
 
 const  openingDetails=async(req,res)=>{
     try {
-        const careers = await CareerOpening.find();
+        const careers = await CareerOpening.find({appName:req.query.appName || 'stns'});
         res.status(200).json(careers);
       } catch (error) {
         res.status(500).json({ message: 'Error fetching career details', error });

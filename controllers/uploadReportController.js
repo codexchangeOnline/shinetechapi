@@ -43,7 +43,7 @@ const storage = multer.diskStorage({
         }
 
         try {
-            const { clientId, reportNo } = req.body;
+            const { clientId, reportNo,appName } = req.body;
             if (!clientId) {
                 return res.status(400).json({ message: "Client ID is required" });
             }
@@ -67,6 +67,7 @@ const storage = multer.diskStorage({
                 fileType: file.mimetype,
                 fileSize: file.size,
                 uploadedAt: new Date(),
+                appName:appName
             }));
  
             let credentialsSection = '';
@@ -110,7 +111,8 @@ const storage = multer.diskStorage({
   
   const viewReport=(async(req,res)=>{
   
-    const { userId } = req.query; // Get userId from request query
+    const { userId,appName } = req.query; // Get userId from request query
+
 
     if (!userId || !mongoose.Types.ObjectId.isValid(userId)) {
       return res.status(400).json({ message: 'Invalid or missing userId' });
@@ -127,10 +129,10 @@ const storage = multer.diskStorage({
         let reports;
         if (user.roleName.toLowerCase() === 'admin') {
             // Admin can view all reports
-            reports = await UploadReport.find().sort({ uploadedAt: -1 }).populate('clientId', 'username');
+            reports = await UploadReport.find({appName:appName === undefined ? "stns" : appName}).sort({ uploadedAt: -1 }).populate('clientId', 'username');
         } else {
             // Clients can only see their own reports
-            reports = await UploadReport.find({ clientId: user._id }).sort({ uploadedAt: -1 }).populate('clientId', 'username');
+            reports = await UploadReport.find({ clientId: user._id, appName:appName === undefined ? "stns" : appName}).sort({ uploadedAt: -1 }).populate('clientId', 'username');
         }
 
         if (!reports || reports.length === 0) {

@@ -17,13 +17,14 @@ const upload = multer({ storage });
 const addClient = async (req, res) => {
   try {
     const files = req.files;
+     const appname = req.body.appName;
 
     if (!files || files.length === 0) {
       return res.status(400).json({ success: false, message: 'No files uploaded.' });
     }
 
     // Map only once for each file
-    const docs = files.map(file => ({ logo: '/uploads/' + file.filename }));
+    const docs = files.map(file => ({ logo: '/uploads/' + file.filename, appName:appname}));
 
     // Save all documents at once
     const result = await Client.insertMany(docs);
@@ -34,14 +35,24 @@ const addClient = async (req, res) => {
   }
 };
 
-const getClient=async(req,res)=>{
-    try {
-        const companies = await Client.find().sort({ createdAt: -1 });
-        res.json(companies);
-      } catch (err) {
-        res.status(500).json({ message: err.message });
-      }
-}
+const getClient = async (req, res) => {
+  try {
+    const appname = req.query.appname || "stns";
+
+    // Check if appname is provided
+    // if (!appname) {
+    //   return res.status(400).json({ message: "appName is required" });
+    // }
+
+    // Filter the clients by appName
+    const companies = await Client.find({ appName: appname }).sort({ createdAt: -1 });
+
+    res.json(companies);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
 
 const deleteClient = async (req, res) => {
   try {
