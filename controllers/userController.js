@@ -7,9 +7,9 @@ const jwt=require('jsonwebtoken')
 const dotenv=require('dotenv').config();
 const sendResetEmail = require("../forgetPasswordService");
 const registerUser=asyncHandler(async(req, res) => {
-    const {username,email,password,roleName}=req.body
+    const {username,email,password,address,roleName}=req.body
     
-    if(!username || !email || !password || !roleName){
+    if(!username || !email || !password ||!address || !roleName){
         res.status(400)
         throw new Error("All field are mandatory")
     }
@@ -20,12 +20,12 @@ const registerUser=asyncHandler(async(req, res) => {
     }
     const hashpassword=await bcrypt.hash(password,10)
     const user= await User.create({
-        username,email,password:hashpassword,roleName,originalPassword:password
+        username,email,password:hashpassword,address,roleName,originalPassword:password
     })
     if(user){
         res.status(201).json({
             message:"Register Successfull!",
-            _id:user.id,email:user.email,roleName:user.roleName})   
+            _id:user.id,email:user.email,address:user.address,roleName:user.roleName})   
     }else{
 
         res.status(400)
@@ -83,7 +83,9 @@ const currentUser=asyncHandler(async(req, res) => {
 const getUser=asyncHandler(async(req, res) => {
     
     try {
-        const clients = await User.find({ roleName: 'Client' }).select('username _id');
+        const clients = await User.find({ roleName: 'Client' }).select('username _id address');
+        console.log(clients);
+        
         res.status(200).json({ data: clients });
       } catch (error) {
         console.error(error);
