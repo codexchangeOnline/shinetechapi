@@ -6,6 +6,7 @@ const crypto = require("crypto");
 const jwt=require('jsonwebtoken')
 const dotenv=require('dotenv').config();
 const sendResetEmail = require("../forgetPasswordService");
+const Invoice = require('../models/invoiceModel');
 const registerUser=asyncHandler(async(req, res) => {
     const {username,email,password,address,roleName}=req.body
     
@@ -97,15 +98,22 @@ const getUser=asyncHandler(async(req, res) => {
 const deleteUser = asyncHandler(async (req, res) => {
   try {
     const clientId = req.params.id;
-
+const customerName = req.params.id;
     // Check if clientId is used in UploadReport
     const reportExists = await UploadReport.findOne({ clientId });
+    const rtReportExists=await Invoice.findOne({customerName})
 
     if (reportExists) {
       return res.status(400).json({
-        message: 'Cannot delete client. Report(s) exist for this client.',
+        message: 'Cannot delete client. Report(s) uploaded for this client.',
       });
     }
+        if (rtReportExists) {
+      return res.status(400).json({
+        message: 'Cannot delete customer. RtReport(s) exist for this customer.',
+      });
+    }
+
 
     // Proceed to delete if no reports found
     const client = await User.findByIdAndDelete(clientId);

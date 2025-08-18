@@ -19,7 +19,7 @@ const getInvoice = asyncHandler(async (req, res) => {
 
 // Create new invoice
 const createInvoice = asyncHandler(async (req, res) => {
-    console.log("Invoice data:", req.body)
+    //console.log("Invoice data:", req.body)
     
     const {
         clientName, customerName, date, reportNo, jobDescription, srNoRtNo,
@@ -76,6 +76,39 @@ const deleteInvoice = asyncHandler(async (req, res) => {
 })
 
 // Get invoices by date range
+// report.controller.js
+
+
+ const getNextReportNo = async (req, res) => {
+  try {
+    // Financial year (example: 2025-26)
+    const start = new Date("2025-04-01");
+    const end = new Date("2026-03-31");
+
+    // Last report in current financial year
+    const lastReport = await Invoice.findOne({
+      createdAt: { $gte: start, $lte: end }
+    }).sort({ createdAt: -1 }); // latest record
+
+    let nextSequence = 1;
+
+    if (lastReport) {
+      // Extract last number
+      const parts = lastReport.reportNo.split("/");
+      const lastSeq = parseInt(parts[2]);
+      nextSequence = lastSeq + 1;
+    }
+
+    // Format sequence → 01, 02, 03...
+    const sequence = nextSequence.toString().padStart(2, "0");
+    const nextReportNo = `STNS/25-26/${sequence}`;
+
+    res.json({ reportNo: nextReportNo });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
 const getInvoicesByDateRange = asyncHandler(async (req, res) => {
     const { startDate, endDate } = req.query
     
@@ -112,5 +145,6 @@ module.exports = {
     updateInvoice,
     deleteInvoice,
     getInvoicesByDateRange,
-    getInvoicesByCustomer
+    getInvoicesByCustomer,
+    getNextReportNo
 }
