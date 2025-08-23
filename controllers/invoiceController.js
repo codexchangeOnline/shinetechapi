@@ -1,9 +1,30 @@
 const asyncHandler = require('express-async-handler')
 const Invoice = require('../models/invoiceModel')
+const User = require('../models/userModel')
+
 
 // Get all invoices
 const getInvoices = asyncHandler(async (req, res) => {
-    const invoices = await Invoice.find().sort({ createdAt: -1 })
+    const userId = req.params.createdBy; // Get userId from request query
+        if (!userId) {
+          return res.status(400).json({ message: 'Invalid or missing userId' });
+        }
+
+        // Fetch the user by ID
+                const user = await User.findById(userId);
+        
+                if (!user) {
+                    return res.status(404).json({ message: 'User not found' });
+                }
+                let invoices;
+                 if (user.roleName.toLowerCase() === 'admin') {
+                            // Admin can view all reports
+                            invoices = await Invoice.find().sort({ createdAt: -1 })
+                        } else {
+                            // Clients can only see their own reports
+                            invoices = await Invoice.find({createdBy: user._id}).sort({ createdAt: -1 })
+                            
+                        }
     res.status(200).json(invoices)
 })
 
@@ -28,7 +49,7 @@ const createInvoice = asyncHandler(async (req, res) => {
         acptanceStndrd, coverage, shootingKetchNo, radiationSource, 
         sourceStrength, sourceSize, screen, exposureTime, filmBrandType,
         filmProcessing, processingTime, filmDensity, filmSizeSummary,
-        totalFilms, totalSqInches, testRows
+        totalFilms, totalSqInches, testRows,createdBy
     } = req.body
 
     const invoice = await Invoice.create({
@@ -38,7 +59,7 @@ const createInvoice = asyncHandler(async (req, res) => {
         acptanceStndrd, coverage, shootingKetchNo, radiationSource, 
         sourceStrength, sourceSize, screen, exposureTime, filmBrandType,
         filmProcessing, processingTime, filmDensity, filmSizeSummary,
-        totalFilms, totalSqInches, testRows
+        totalFilms, totalSqInches, testRows,createdBy
     })
 
     res.status(201).json(invoice)

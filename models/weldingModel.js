@@ -1,7 +1,7 @@
 const mongoose = require('mongoose')
 
 const testRowSchema = mongoose.Schema({
-    idLoc: {
+    idSysCode: {
         type: String,
         default: ''
     },
@@ -9,11 +9,16 @@ const testRowSchema = mongoose.Schema({
         type: String,
         default: ''
     },
-    tech: {
+
+    jointNo: {
         type: String,
         default: ''
     },
-    thick: {
+    welderNo: {
+        type: String,
+        default: ''
+    },
+      segment: {
         type: String,
         default: ''
     },
@@ -21,15 +26,15 @@ const testRowSchema = mongoose.Schema({
         type: String,
         default: ''
     },
-    sfd: {
+      sfd: {
         type: String,
         default: ''
     },
-    iqi: {
+        iqi: {
         type: String,
         default: ''
     },
-    x: {
+        x: {
         type: String,
         default: ''
     },
@@ -45,19 +50,16 @@ const testRowSchema = mongoose.Schema({
         type: String,
         default: ''
     }
+    
 })
 
-const invoiceSchema = mongoose.Schema({
+const wedingSchema = mongoose.Schema({
     // Report data
     clientName: {
         type: String,
         default: ''
     },
-    customerName: {
-        type: String,
-        default: ''
-    },
-    date: {
+    dateOfRt: {
         type: String,
         default: ''
     },
@@ -65,79 +67,37 @@ const invoiceSchema = mongoose.Schema({
         type: String,
         default: ''
     },
-    jobDescription: {
+    project: {
         type: String,
         default: ''
     },
-    srNoRtNo: {
+    inspectionAgen: {
         type: String,
         default: ''
     },
-    dieToolNo: {
+    dateOfSubnm: {
         type: String,
         default: ''
     },
-    heatNo: {
+    materialNthick: {
         type: String,
         default: ''
     },
-    material: {
+    source: {
         type: String,
         default: ''
     },
-    drgNo: {
+    strength: {
         type: String,
         default: ''
     },
-    dateOfTesting: {
+
+    RtTechq: {
         type: String,
         default: ''
     },
-    offerNo: {
-        type: String,
-        default: ''
-    },
-    testCarriedOutAt: {
-        type: String,
-        default: ''
-    },
-    poNo: {
-        type: String,
-        default: ''
-    },
-    procedureNo: {
-        type: String,
-        default: ''
-    },
-    procedureFollowed: {
-        type: String,
-        default: ''
-    },
-    evalStndrd: {
-        type: String,
-        default: ''
-    },
-    acptanceStndrd: {
-        type: String,
-        default: ''
-    },
-    coverage: {
-        type: String,
-        default: ''
-    },
-    shootingKetchNo: {
-        type: String,
-        default: ''
-    },
-    radiationSource: {
-        type: String,
-        default: ''
-    },
-    sourceStrength: {
-        type: String,
-        default: ''
-    },
-    sourceSize: {
+
+    filmUsed: {
         type: String,
         default: ''
     },
@@ -145,35 +105,35 @@ const invoiceSchema = mongoose.Schema({
         type: String,
         default: ''
     },
-    exposureTime: {
+    jointType: {
         type: String,
         default: ''
     },
-    filmBrandType: {
+    expoTime: {
         type: String,
         default: ''
     },
-    filmProcessing: {
+    devTime: {
         type: String,
         default: ''
     },
-    processingTime: {
+    atTemp: {
         type: String,
         default: ''
     },
-    filmDensity: {
+    cDensity: {
         type: String,
         default: ''
     },
-    filmSizeSummary: {
+    ug: {
         type: String,
         default: ''
     },
-    totalFilms: {
+    weldingProcess: {
         type: String,
         default: ''
     },
-    totalSqInches: {
+    acceptOnCriteria: {
         type: String,
         default: ''
     },
@@ -187,4 +147,4 @@ const invoiceSchema = mongoose.Schema({
     timestamps: true,
 })
 
-module.exports = mongoose.model("Invoice", invoiceSchema)
+module.exports = mongoose.model("Welding", wedingSchema)

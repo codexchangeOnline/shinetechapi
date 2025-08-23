@@ -13,7 +13,8 @@ const {
 const validateToken = require('../middleware/validateToken')
 
 // Public routes (can be made protected later if needed)
-router.route("/").get(getInvoices).post(createInvoice)
+router.route("/").post(createInvoice);
+router.route("/loadall/:createdBy").get(getInvoices)
 router.route("/next-report-no").get(getNextReportNo)
 router.route("/:id").get(getInvoice).put(updateInvoice).delete(deleteInvoice)
 

@@ -1,0 +1,165 @@
+const asyncHandler = require('express-async-handler')
+const Welding = require('../models/weldingModel')
+const User = require('../models/userModel')
+
+
+// Get all welding
+const getWelding = asyncHandler(async (req, res) => {
+    const userId = req.params.createdBy; // Get userId from request query
+     if (!userId) {
+          return res.status(400).json({ message: 'Invalid or missing userId' });
+        }
+        
+                // Fetch the user by ID
+                        const user = await User.findById(userId);
+                
+                        if (!user) {
+                            return res.status(404).json({ message: 'User not found' });
+                        }
+                        let welding;
+                                         if (user.roleName.toLowerCase() === 'admin') {
+                                                    // Admin can view all reports
+                                                    welding = await Welding.find().sort({ createdAt: -1 })
+                                                } else {
+                                                    // Clients can only see their own reports
+                                                    welding = await Welding.find({createdBy: user._id}).sort({ createdAt: -1 })
+                                                    
+                                                }
+    res.status(200).json(welding)
+})
+
+// Get single welding by ID
+const getWeldingById = asyncHandler(async (req, res) => {
+    const welding = await Welding.findById(req.params.id)
+    if (!welding) {
+        res.status(404)
+        throw new Error("welding not found")
+    }
+    res.status(200).json(welding)
+})
+
+// Create new welding
+const createWelding = asyncHandler(async (req, res) => {
+    //console.log("welding data:", req.body)
+    
+    const {
+        clientName, dateOfRt, reportNo, project, inspectionAgen,
+        dateOfSubnm, materialNthick, source, strength, RtTechq, filmUsed, 
+        screen, jointType, expoTime, devTime, atTemp,
+        cDensity, ug, weldingProcess, acceptOnCriteria, testRows,createdBy
+    } = req.body
+
+    const welding = await Welding.create({
+        clientName, dateOfRt, reportNo, project, inspectionAgen,
+        dateOfSubnm, materialNthick, source, strength, RtTechq, filmUsed, 
+        screen, jointType, expoTime, devTime, atTemp,
+        cDensity, ug, weldingProcess, acceptOnCriteria, testRows,createdBy
+    })
+
+    res.status(201).json(welding)
+})
+
+// Update welding
+const updateWelding = asyncHandler(async (req, res) => {
+    const welding = await Welding.findById(req.params.id)
+    
+    if (!welding) {
+        res.status(404)
+        throw new Error("Welding not found")
+    }
+
+    const updatedWelding = await Welding.findByIdAndUpdate(
+        req.params.id,
+        req.body,
+        { new: true }
+    )
+    
+    res.status(200).json(updatedWelding)
+})
+
+// Delete welding
+const deleteWelding = asyncHandler(async (req, res) => {
+    const welding = await Welding.findById(req.params.id)
+    
+    if (!welding) {
+        res.status(404)
+        throw new Error("Welding not found")
+    }
+
+    const deletedWelding = await Welding.deleteOne({ _id: req.params.id })
+    res.status(200).json(deletedWelding)
+})
+
+// Get welding by date range
+// report.controller.js
+
+
+ const getNextReportNo = async (req, res) => {
+  try {
+    // Financial year (example: 2025-26)
+    const start = new Date("2025-04-01");
+    const end = new Date("2026-03-31");
+
+    // Last report in current financial year
+    const lastReport = await Welding.findOne({
+      createdAt: { $gte: start, $lte: end }
+    }).sort({ createdAt: -1 }); // latest record
+
+    let nextSequence = 1;
+
+    if (lastReport) {
+      // Extract last number
+      const parts = lastReport.reportNo.split("/");
+      const lastSeq = parseInt(parts[2]);
+      nextSequence = lastSeq + 1;
+    }
+
+    // Format sequence → 01, 02, 03...
+    const sequence = nextSequence.toString().padStart(2, "0");
+    const nextReportNo = `STNS/25-26/${sequence}`;
+
+    res.json({ reportNo: nextReportNo });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+const getWeldingByDateRange = asyncHandler(async (req, res) => {
+    const { startDate, endDate } = req.query
+    
+    if (!startDate || !endDate) {
+        res.status(400)
+        throw new Error("Start date and end date are required")
+    }
+
+    const welding = await Welding.find({
+        date: {
+            $gte: startDate,
+            $lte: endDate
+        }
+    }).sort({ date: -1 })
+
+    res.status(200).json(welding)
+})
+
+// Get welding by customer name
+const getWeldingByCustomer = asyncHandler(async (req, res) => {
+    const { clientName } = req.params
+    
+    const welding = await Welding.find({
+        clientName: { $regex: clientName, $options: 'i' }
+    }).sort({ createdAt: -1 })
+
+    res.status(200).json(welding)
+})
+
+module.exports = {
+    getWelding,
+    getWeldingById,
+    createWelding,
+    updateWelding,
+    deleteWelding,
+    getWeldingByDateRange,
+    getWeldingByCustomer,
+    getNextReportNo
+}
