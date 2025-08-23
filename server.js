@@ -17,6 +17,7 @@ const clientRoutes=require('./route/clientRoute')
 const enquiry=require('./route/enquiryRoute')
 const certificationRoutes=require('./route/certificationRoute')
 const invoiceRoutes=require('./route/invoiceRoutes')
+const weldingRoutes=require('./route/weldingRoute')
 const errorHandler = require('./middleware/errorHandler');
 app.use(cors({
     origin: process.env.FRONTEND_BASE_URL,      // Allow only the frontend on localhost:4200
@@ -36,6 +37,7 @@ app.use("/api/uploadReport",uploadReport)
 app.use("/api/gallery",uploadGallery)
 app.use("/api/certification",certificationRoutes)
 app.use("/api/invoice",invoiceRoutes)
+app.use("/api/welding",weldingRoutes)
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 app.listen(port,()=>{
     console.log("Server is running");
