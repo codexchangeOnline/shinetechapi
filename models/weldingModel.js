@@ -22,10 +22,7 @@ const testRowSchema = mongoose.Schema({
         type: String,
         default: ''
     },
-    density: {
-        type: String,
-        default: ''
-    },
+   
       sfd: {
         type: String,
         default: ''
@@ -38,10 +35,7 @@ const testRowSchema = mongoose.Schema({
         type: String,
         default: ''
     },
-    sens: {
-        type: String,
-        default: ''
-    },
+   
     finding: {
         type: String,
         default: ''
@@ -92,7 +86,7 @@ const wedingSchema = mongoose.Schema({
         default: ''
     },
 
-    RtTechq: {
+    rtTechq: {
         type: String,
         default: ''
     },
@@ -134,6 +128,10 @@ const wedingSchema = mongoose.Schema({
         default: ''
     },
     acceptOnCriteria: {
+        type: String,
+        default: ''
+    },
+      sensitivity: {
         type: String,
         default: ''
     },

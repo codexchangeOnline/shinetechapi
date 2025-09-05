@@ -52,6 +52,14 @@ const createInvoice = asyncHandler(async (req, res) => {
         totalFilms, totalSqInches, testRows,createdBy
     } = req.body
 
+      const exists = await Invoice.findOne({ reportNo: reportNo });
+  if (exists) {
+    return res.status(400).json({
+      success: false,
+      message: `Report No ${reportNo} already exists!`
+    });
+  }
+
     const invoice = await Invoice.create({
         clientName, customerName, date, reportNo, jobDescription, srNoRtNo,
         dieToolNo, heatNo, material, drgNo, dateOfTesting, offerNo, 
