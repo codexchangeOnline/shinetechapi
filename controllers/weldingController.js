@@ -44,16 +44,24 @@ const createWelding = asyncHandler(async (req, res) => {
     
     const {
         clientName, dateOfRt, reportNo, project, inspectionAgen,
-        dateOfSubnm, materialNthick, source, strength, RtTechq, filmUsed, 
+        dateOfSubnm, materialNthick, source, strength, rtTechq, filmUsed, 
         screen, jointType, expoTime, devTime, atTemp,
-        cDensity, ug, weldingProcess, acceptOnCriteria, testRows,createdBy
+        cDensity, ug, weldingProcess, acceptOnCriteria,sensitivity, testRows,createdBy
     } = req.body
+
+   const exists = await Welding.findOne({ reportNo: reportNo });
+  if (exists) {
+    return res.status(400).json({
+      success: false,
+      message: `Report No ${reportNo} already exists!`
+    });
+  }
 
     const welding = await Welding.create({
         clientName, dateOfRt, reportNo, project, inspectionAgen,
-        dateOfSubnm, materialNthick, source, strength, RtTechq, filmUsed, 
+        dateOfSubnm, materialNthick, source, strength, rtTechq, filmUsed, 
         screen, jointType, expoTime, devTime, atTemp,
-        cDensity, ug, weldingProcess, acceptOnCriteria, testRows,createdBy
+        cDensity, ug, weldingProcess, acceptOnCriteria,sensitivity, testRows,createdBy
     })
 
     res.status(201).json(welding)
