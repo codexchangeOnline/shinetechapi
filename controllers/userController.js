@@ -241,5 +241,41 @@ const resetPassword = async (req, res) => {
     res.status(500).json({ error: "Server error" });
 }
 };
+// ✅ Get all unique roles (using find)
+const getRoles = asyncHandler(async (req, res) => {
+  try {
+    // sirf roleName field lao
+    const rolesData = await User.find({}, "roleName");
 
-module.exports={registerUser,loginUser,currentUser,getUser,deleteUser,changePassword,forgetPassword,resetPassword}
+    // map + Set se unique roles nikal lo
+    const roles = [...new Set(rolesData.map(r => r.roleName))];
+
+    res.status(200).json({ data: roles });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Error fetching roles" });
+  }
+});
+
+// ✅ Delete role by roleName
+const deleteRole = asyncHandler(async (req, res) => {
+  try {
+    const { roleName } = req.params;
+
+    if (!roleName) {
+      return res.status(400).json({ message: "Role name is required" });
+    }
+
+    const result = await User.deleteMany({ roleName });
+
+    res.status(200).json({
+      message: `Role '${roleName}' deleted successfully`,
+      deletedCount: result.deletedCount,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Error deleting role" });
+  }
+});
+
+module.exports={registerUser,loginUser,currentUser,getUser,deleteUser,changePassword,forgetPassword,resetPassword,getRoles,deleteRole}
