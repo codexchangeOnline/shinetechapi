@@ -9,7 +9,7 @@ router.post("/register",registerUser);
 router.post("/login",loginUser);
 router.get("/getUser",getUser);
 router.get("/roles", getRoles);          // Get all unique roles
-router.delete("/roles/:roleName", deleteRole); 
+router.delete("/roles/:id", deleteRole); 
 router.delete("/getUser/:id",deleteUser);
 router.post("/changepassword",changePassword);
 router.post("/forgetpassword",forgetPassword);

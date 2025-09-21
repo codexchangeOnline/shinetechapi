@@ -7,6 +7,7 @@ const jwt=require('jsonwebtoken')
 const dotenv=require('dotenv').config();
 const sendResetEmail = require("../forgetPasswordService");
 const Invoice = require('../models/invoiceModel');
+const Welding = require('../models/weldingModel');
 const registerUser=asyncHandler(async(req, res) => {
     const {username,email,password,address,roleName}=req.body
     
@@ -99,18 +100,25 @@ const deleteUser = asyncHandler(async (req, res) => {
   try {
     const clientId = req.params.id;
 const customerName = req.params.id;
+const clientName = req.params.id;
     // Check if clientId is used in UploadReport
     const reportExists = await UploadReport.findOne({ clientId });
-    const rtReportExists=await Invoice.findOne({customerName})
+    const castingReportExists=await Invoice.findOne({customerName})
+    const weldingReportExists=await Welding.findOne({clientName})
 
     if (reportExists) {
       return res.status(400).json({
         message: 'Cannot delete client. Report(s) uploaded for this client.',
       });
     }
-        if (rtReportExists) {
+        if (castingReportExists) {
       return res.status(400).json({
-        message: 'Cannot delete customer. RtReport(s) exist for this customer.',
+        message: 'Cannot delete client. Casting Report(s) exist for this client.',
+      });
+    }
+         if (weldingReportExists) {
+      return res.status(400).json({
+        message: 'Cannot delete client. Welding Report(s) exist for this client.',
       });
     }
 
@@ -241,16 +249,14 @@ const resetPassword = async (req, res) => {
     res.status(500).json({ error: "Server error" });
 }
 };
-// ✅ Get all unique roles (using find)
 const getRoles = asyncHandler(async (req, res) => {
   try {
-    // sirf roleName field lao
-    const rolesData = await User.find({}, "roleName");
+    // Sirf name aur roleName fields lao
+    const users = await User.find({}, "username roleName");
+    console.log(users);
+    
 
-    // map + Set se unique roles nikal lo
-    const roles = [...new Set(rolesData.map(r => r.roleName))];
-
-    res.status(200).json({ data: roles });
+    res.status(200).json({ data: users });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Error fetching roles" });
@@ -260,21 +266,42 @@ const getRoles = asyncHandler(async (req, res) => {
 // ✅ Delete role by roleName
 const deleteRole = asyncHandler(async (req, res) => {
   try {
-    const { roleName } = req.params;
+    const clientId = req.params.id;
+const customerName = req.params.id;
+const clientName = req.params.id;
+    // Check if clientId is used in UploadReport
+    const reportExists = await UploadReport.findOne({ clientId });
+    const castingReportExists=await Invoice.findOne({customerName})
+    const weldingReportExists=await Welding.findOne({clientName})
 
-    if (!roleName) {
-      return res.status(400).json({ message: "Role name is required" });
+    if (reportExists) {
+      return res.status(400).json({
+        message: 'Cannot delete client. Report(s) uploaded for this client.',
+      });
+    }
+        if (castingReportExists) {
+      return res.status(400).json({
+        message: 'Cannot delete client. Casting Report(s) exist for this client.',
+      });
+    }
+         if (weldingReportExists) {
+      return res.status(400).json({
+        message: 'Cannot delete client. Welding Report(s) exist for this client.',
+      });
     }
 
-    const result = await User.deleteMany({ roleName });
 
-    res.status(200).json({
-      message: `Role '${roleName}' deleted successfully`,
-      deletedCount: result.deletedCount,
-    });
+    // Proceed to delete if no reports found
+    const client = await User.findByIdAndDelete(clientId);
+
+    if (!client) {
+      return res.status(404).json({ message: 'Client not found' });
+    }
+
+    res.status(200).json({ message: 'Client deleted successfully' });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ message: "Error deleting role" });
+    res.status(500).json({ message: 'Error deleting client' });
   }
 });
 
