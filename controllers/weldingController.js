@@ -102,27 +102,33 @@ const deleteWelding = asyncHandler(async (req, res) => {
 // report.controller.js
 
 
- const getNextReportNo = async (req, res) => {
+const getNextReportNo = async (req, res) => {
   try {
-    // Financial year (example: 2025-26)
+    // Financial year range
     const start = new Date("2025-04-01");
     const end = new Date("2026-03-31");
 
-    // Last report in current financial year
-    const lastReport = await Welding.findOne({
+    // Financial year में सारे reports ढूँढो
+    const reports = await Welding.find({
       createdAt: { $gte: start, $lte: end }
-    }).sort({ createdAt: -1 }); // latest record
+    }).select("reportNo");
 
-    let nextSequence = 1;
+    let maxSeq = 0;
 
-    if (lastReport) {
-      // Extract last number
-      const parts = lastReport.reportNo.split("/");
-      const lastSeq = parseInt(parts[2]);
-      nextSequence = lastSeq + 1;
+    if (reports.length > 0) {
+      reports.forEach(r => {
+        const parts = r.reportNo.split("/");
+        const seq = parseInt(parts[2]); // तीसरा हिस्सा number है
+        if (!isNaN(seq) && seq > maxSeq) {
+          maxSeq = seq;
+        }
+      });
     }
 
-    // Format sequence → 01, 02, 03...
+    // Next sequence
+    const nextSequence = maxSeq + 1;
+
+    // Format sequence → 01, 02, ...
     const sequence = nextSequence.toString().padStart(2, "0");
     const nextReportNo = `STNS/25-26/${sequence}`;
 
