@@ -243,5 +243,111 @@ cron.schedule('0 0 * * *', async () => {
   }
 });
 
+const express = require('express');
+const { exec } = require('child_process');
+
+const app = express();
+
+// === Configuration ===
+const backupBasePath = '/root/mongodb_backups'; // main backup directory
+const mongoUri = 'mongodb+srv://relevantengg:Repl_2025_secure@cluster0.gakaqen.mongodb.net/shinetech';
+
+// === Ensure base directory exists ===
+if (!fs.existsSync(backupBasePath)) {
+  fs.mkdirSync(backupBasePath, { recursive: true });
+  console.log(`✅ Created backup directory: ${backupBasePath}`);
+}
+
+// === Utility: Format date ===
+function formatDate(date) {
+  const yyyy = date.getFullYear();
+  const mm = String(date.getMonth() + 1).padStart(2, '0');
+  const dd = String(date.getDate()).padStart(2, '0');
+  return `${yyyy}-${mm}-${dd}`;
+}
+
+// === Backup Function (Reusable) ===
+function runMongoBackup(isManual = false) {
+  const today = new Date();
+  const folderName = `backup-${formatDate(today)}`;
+  const outputPath = path.join(backupBasePath, folderName);
+  const logFilePath = path.join(outputPath, 'backup-log.txt');
+
+  // Ensure today's folder exists
+  if (!fs.existsSync(outputPath)) {
+    fs.mkdirSync(outputPath, { recursive: true });
+  }
+
+  const command = `mongodump --uri="${mongoUri}" --out="${outputPath}"`;
+  const startMsg = `[${new Date().toLocaleString()}] ${isManual ? '[Manual]' : '[Scheduled]'} Starting backup...\nCommand: ${command}\n`;
+  console.log(startMsg);
+  fs.appendFileSync(logFilePath, startMsg);
+
+  // Run backup
+  exec(command, (error, stdout, stderr) => {
+    if (error) {
+      const errMsg = `❌ Error: ${error.message}\n`;
+      console.error(errMsg);
+      fs.appendFileSync(logFilePath, errMsg);
+      return;
+    }
+
+    if (stderr) {
+      const warnMsg = `⚠️ stderr: ${stderr}\n`;
+      console.warn(warnMsg);
+      fs.appendFileSync(logFilePath, warnMsg);
+    }
+
+    const successMsg = `✅ Backup completed successfully at ${new Date().toLocaleString()}\nSaved to: ${outputPath}\n\n`;
+    console.log(successMsg);
+    fs.appendFileSync(logFilePath, successMsg);
+
+    // Delete backups older than 7 days
+    fs.readdirSync(backupBasePath).forEach(folder => {
+      const folderPath = path.join(backupBasePath, folder);
+      fs.stat(folderPath, (err, stats) => {
+        if (err) return;
+        const age = Date.now() - stats.mtimeMs;
+        if (age > 7 * 24 * 60 * 60 * 1000) { // older than 7 days
+          fs.rmSync(folderPath, { recursive: true, force: true });
+          const deleteMsg = `[${new Date().toLocaleString()}] 🧹 Deleted old backup: ${folderPath}\n`;
+          console.log(deleteMsg);
+          fs.appendFileSync(logFilePath, deleteMsg);
+        }
+      });
+    });
+  });
+}
+
+// === Scheduler: Run daily at midnight ===
+cron.schedule('0 0 * * *', () => {
+  console.log('🕛 Scheduled backup started...');
+  runMongoBackup(false);
+});
+
+// === API Endpoint: Manual Backup ===
+// app.get('/api/manual-backup', (req, res) => {
+//   try {
+//     runMongoBackup(true);
+//     res.status(200).json({
+//       message: 'Manual backup started successfully. Check backup-log.txt for details.',
+//       timestamp: new Date().toISOString(),
+//     });
+//   } catch (err) {
+//     console.error('Manual backup error:', err);
+//     res.status(500).json({
+//       message: 'Failed to start manual backup.',
+//       error: err.message,
+//     });
+//   }
+// });
+
+// // === Start Express server ===
+// const PORT = 4000; // or your API port
+// app.listen(PORT, () => {
+//   console.log(`🚀 Server running at http://localhost:${PORT}`);
+//   console.log('✅ MongoDB backup scheduler initialized.');
+// });
+
 
   module.exports = {uploadReport,viewReport,deleteReport};
