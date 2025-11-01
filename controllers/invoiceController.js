@@ -136,7 +136,7 @@ const getNextReportNo = async (req, res) => {
 
     // Format sequence → 01, 02, ...
     const sequence = nextSequence.toString().padStart(2, "0");
-    const nextReportNo = `STNS/25-26/${sequence}`;
+    const nextReportNo = `STNS_R/25-26/${sequence}`;
 
     res.json({ reportNo: nextReportNo });
   } catch (error) {
