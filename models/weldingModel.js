@@ -48,6 +48,10 @@ const testRowSchema = mongoose.Schema({
 })
 
 const wedingSchema = mongoose.Schema({
+    isMailSent: {
+    type: Boolean,
+    default: false   // by default true
+  },
     // Report data
     clientName: {
         type: String,

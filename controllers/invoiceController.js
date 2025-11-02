@@ -1,6 +1,7 @@
 const asyncHandler = require('express-async-handler')
 const Invoice = require('../models/invoiceModel')
-const User = require('../models/userModel')
+const User = require('../models/userModel');
+const  UploadReport  = require('../models/uploadReportModel');
 
 
 // Get all invoices
@@ -93,16 +94,36 @@ const updateInvoice = asyncHandler(async (req, res) => {
 
 // Delete invoice
 const deleteInvoice = asyncHandler(async (req, res) => {
-    const invoice = await Invoice.findById(req.params.id)
-    
+  try {
+    const invoiceId = req.params.id;
+
+    // Pehle invoice check karo
+    const invoice = await Invoice.findById(invoiceId);
     if (!invoice) {
-        res.status(404)
-        throw new Error("Invoice not found")
+      return res.status(404).json({ message: "Invoice not found" });
     }
 
-    const deletedInvoice = await Invoice.deleteOne({ _id: req.params.id })
-    res.status(200).json(deletedInvoice)
-})
+    // Check if any uploaded reports exist for this invoice
+    const reportExists = await UploadReport.findOne({ rtReportId: invoiceId });
+    if (reportExists) {
+      return res.status(400).json({
+        message: "Cannot delete this report. Reports uploaded for this Casting.",
+      });
+    }
+
+    // Agar report nahi hai, tab invoice delete karo
+    const deletedInvoice = await Invoice.findByIdAndDelete(invoiceId);
+
+    res.status(200).json({
+      message: "Invoice deleted successfully",
+      deletedInvoice
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Error deleting invoice" });
+  }
+});
+
 
 // Get invoices by date range
 // report.controller.js

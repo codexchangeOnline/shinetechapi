@@ -11,26 +11,34 @@ const fileSchema = new mongoose.Schema({
       type:String,
       required:true
     },
-  originalName: {
-    type: String,
-    required: true,
-  },
-  uploadedName: {
-    type: String,
-    required: true,
-  },
-  filePath: {
-    type: String,
-    required: true,
-  },
-  fileType: {
-    type: String,
-    required: true,
-  },
-  fileSize: {
-    type: Number,
-    required: true,
-  },
+      rtReportId:{
+        type:String,
+default:''
+    },
+      isCastingReport:{
+        type:Boolean,
+default:true
+    },
+  // originalName: {
+  //   type: String,
+  //   required: true,
+  // },
+  // uploadedName: {
+  //   type: String,
+  //   required: true,
+  // },
+  // filePath: {
+  //   type: String,
+  //   required: true,
+  // },
+  // fileType: {
+  //   type: String,
+  //   required: true,
+  // },
+  // fileSize: {
+  //   type: Number,
+  //   required: true,
+  // },
   uploadedAt: {
     type: Date,
     default: Date.now,

@@ -1,7 +1,7 @@
 const asyncHandler = require('express-async-handler')
 const Welding = require('../models/weldingModel')
 const User = require('../models/userModel')
-
+const  UploadReport  = require('../models/uploadReportModel');
 
 // Get all welding
 const getWelding = asyncHandler(async (req, res) => {
@@ -87,16 +87,36 @@ const updateWelding = asyncHandler(async (req, res) => {
 
 // Delete welding
 const deleteWelding = asyncHandler(async (req, res) => {
-    const welding = await Welding.findById(req.params.id)
     
+  try {
+    const weldingId = req.params.id;
+
+    // Pehle invoice check karo
+    const welding = await Welding.findById(weldingId);
     if (!welding) {
-        res.status(404)
-        throw new Error("Welding not found")
+      return res.status(404).json({ message: "welding not found" });
     }
 
-    const deletedWelding = await Welding.deleteOne({ _id: req.params.id })
-    res.status(200).json(deletedWelding)
-})
+    // Check if any uploaded reports exist for this invoice
+    const reportExists = await UploadReport.findOne({ rtReportId: weldingId });
+    if (reportExists) {
+      return res.status(400).json({
+        message: "Cannot delete this report. Reports uploaded for this Casting.",
+      });
+    }
+
+    // Agar report nahi hai, tab invoice delete karo
+    const deletedwelding = await Welding.findByIdAndDelete(weldingId);
+
+    res.status(200).json({
+      message: "welding deleted successfully",
+      deletedwelding
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Error deleting welding" });
+  }
+});
 
 // Get welding by date range
 // report.controller.js
