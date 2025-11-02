@@ -3,6 +3,8 @@ const multer = require('multer');
 const path = require('path');
 const UploadReport=require('../models/uploadReportModel')
 const User = require('../models/userModel')
+const Invoice = require('../models/invoiceModel')
+const Welding = require('../models/weldingModel')
 const mongoose=require('mongoose');
 const sendMail = require('../emailService');
 require('dotenv').config();
@@ -36,47 +38,113 @@ const storage = multer.diskStorage({
     },
   }).array('files', 10); // Allow up to 10 files at a time
   
-  const uploadReport = async (req, res) => {
-    upload(req, res, async (err) => {
-        if (err) {
-            return res.status(400).json({ message: err.message });
-        }
+//   const uploadReport = async (req, res) => {
+//     upload(req, res, async (err) => {
+//         if (err) {
+//             return res.status(400).json({ message: err.message });
+//         }
 
-        try {
-            const { clientId, reportNo,appName } = req.body;
-            if (!clientId) {
-                return res.status(400).json({ message: "Client ID is required" });
-            }
+//         try {
+//             const { clientId, reportNo,appName } = req.body;
+//             if (!clientId) {
+//                 return res.status(400).json({ message: "Client ID is required" });
+//             }
 
-            // Check if the user (client) exists
-            const user = await User.findById(clientId);
+//             // Check if the user (client) exists
+//             const user = await User.findById(clientId);
             
-            if (!user) {
-                return res.status(404).json({ message: "Client not found" });
-            }
-// console.log("originalPassword",user.originalPassword);
+//             if (!user) {
+//                 return res.status(404).json({ message: "Client not found" });
+//             }
+// // console.log("originalPassword",user.originalPassword);
 
            
-            // Save file metadata to MongoDB
-            const uploadedFiles = req.files.map((file) => ({
-                clientId: clientId,
-                reportNo:reportNo,
-                originalName: file.originalname,
-                uploadedName: file.filename,
-                filePath: file.path,
-                fileType: file.mimetype,
-                fileSize: file.size,
-                uploadedAt: new Date(),
-                appName:appName
-            }));
+//             // Save file metadata to MongoDB
+//             const uploadedFiles = req.files.map((file) => ({
+//                 clientId: clientId,
+//                 reportNo:reportNo,
+//                 originalName: file.originalname,
+//                 uploadedName: file.filename,
+//                 filePath: file.path,
+//                 fileType: file.mimetype,
+//                 fileSize: file.size,
+//                 uploadedAt: new Date(),
+//                 appName:appName
+//             }));
  
-            let credentialsSection = '';
-            let SavedReports =await UploadReport.find({ clientId: clientId }).sort({ uploadedAt: -1 }).populate('clientId', 'username');
-            // Insert file metadata into MongoDB
-            const savedFiles = await UploadReport.insertMany(uploadedFiles);
+//             let credentialsSection = '';
+//             let SavedReports =await UploadReport.find({ clientId: clientId }).sort({ uploadedAt: -1 }).populate('clientId', 'username');
+//             // Insert file metadata into MongoDB
+//             const savedFiles = await UploadReport.insertMany(uploadedFiles);
 
+//             // Email content
+//             if (!SavedReports || SavedReports.length === 0){
+//               credentialsSection = `
+//                 <p><strong>Email:</strong> ${user.email}</p>
+//                 <p><strong>Password:</strong> ${user.originalPassword} (Use your original password)</p>
+//               `;
+//             }
+            
+//             const emailContent = `
+//               <h3>Hello ${user.username},</h3>
+//               <p>Your report has been uploaded successfully.</p>
+//               ${credentialsSection}
+//               <p>You can login to view your report.</p>
+//               <p><a href="${process.env.FRONTEND_BASE_URL}/login">Click here to login</a></p>
+//               <p>Thank you!</p>
+//             `;
+            
+
+//             // Send email
+//             await sendMail(user.email, "Your Report is Uploaded", emailContent);
+
+//             res.status(200).json({
+//                 message: "Files uploaded and email sent successfully!",
+//                 files: savedFiles,
+//             });
+            
+//         } catch (error) {
+//             res.status(500).json({ message: "Error processing request", error });
+//         }
+//     });
+// };
+  
+    
+  const uploadReport = async (req, res) => {
+  try {
+    const { clientId, reportNo,rtReportId,isCastingReport, appName } = req.body;
+
+    if (!clientId || !reportNo) {
+      return res.status(400).json({ message: "clientId, reportNo, and appName are required" });
+    }
+
+    // Check if the user (client) exists
+    const user = await User.findById(clientId);
+    if (!user) {
+      return res.status(404).json({ message: "Client not found" });
+    }
+
+    // Prepare new report object
+    const newReport = new UploadReport({
+      clientId: clientId,
+      reportNo: reportNo,
+      appName: appName,
+      rtReportId:rtReportId,
+      isCastingReport:isCastingReport,
+      uploadedAt: new Date()
+    });
+
+
+
+    // Check if user already has reports
+
+  //  Email content
+            let credentialsSection = '';
+            let existingReports =await UploadReport.find({ clientId: clientId });
+    // Save to DB
+    const savedReport = await newReport.save();
             // Email content
-            if (!SavedReports || SavedReports.length === 0){
+            if (!existingReports || existingReports.length === 0){
               credentialsSection = `
                 <p><strong>Email:</strong> ${user.email}</p>
                 <p><strong>Password:</strong> ${user.originalPassword} (Use your original password)</p>
@@ -95,20 +163,22 @@ const storage = multer.diskStorage({
 
             // Send email
             await sendMail(user.email, "Your Report is Uploaded", emailContent);
-
-            res.status(200).json({
-                message: "Files uploaded and email sent successfully!",
-                files: savedFiles,
-            });
-            
-        } catch (error) {
-            res.status(500).json({ message: "Error processing request", error });
-        }
+            if(isCastingReport){
+await Invoice.findByIdAndUpdate(rtReportId, { isMailSent: true });}
+else{
+  await Welding.findByIdAndUpdate(rtReportId,{ isMailSent: true })
+}
+    res.status(200).json({
+      message: "Report has been sent to the client successfully.",
+      report: savedReport
     });
+
+  } catch (error) {
+    console.error("Error in sending report:", error);
+    res.status(500).json({ message: "Error processing request", error });
+  }
 };
-  
-    
-  
+
   const viewReport=(async(req,res)=>{
   
     const { userId,appName } = req.query; // Get userId from request query
@@ -143,8 +213,8 @@ const storage = multer.diskStorage({
             reports: reports.map(report => ({
                 id: report._id,
                 reportNo:report.reportNo,
-                fileName: report.uploadedName, // ✅ Corrected field name
-                filePath: `/uploads/${report.uploadedName}`,
+                rtReportId:report.rtReportId,
+                isCastingReport:report.isCastingReport,
                 clientName: report.clientId ? report.clientId.username : 'Unknown',
                 updateAt:report.uploadedAt
             }))
@@ -155,38 +225,75 @@ const storage = multer.diskStorage({
     }
 });
 
-const deleteReport = async (req, res) => {
+// const deleteReport = async (req, res) => {
+//   try {
+//     const reportId = req.params.id;
+
+//     // Find the report
+//     const report = await UploadReport.findById(reportId);
+
+//     if (!report) {
+//       return res.status(404).json({ message: "Report not found" });
+//     }
+
+//     // Delete the file from the folder
+//     const filePath = path.join(__dirname, '..', report.filePath); // assuming filePath is stored like: 'uploads/filename.pdf'
+    
+//     fs.unlink(filePath, async (err) => {
+//       if (err && err.code !== 'ENOENT') {
+//         // Don't fail if file not found, but log error
+//         console.error("Error deleting file:", err);
+//         return res.status(500).json({ message: 'Failed to delete file from folder' });
+//       }
+
+//       // Delete document from DB
+//       await UploadReport.findByIdAndDelete(reportId);
+
+//       res.json({ success: true, message: "Report and file deleted successfully" });
+//     });
+
+//   } catch (error) {
+//     console.error('Delete report error:', error);
+//     res.status(500).json({ message: "Server error" });
+//   }
+// };
+
+// ✅ Delete Report (without file handling)
+const deleteReport = asyncHandler(async (req, res) => {
   try {
     const reportId = req.params.id;
 
-    // Find the report
+    // 1️⃣ Report find karo
     const report = await UploadReport.findById(reportId);
-
     if (!report) {
-      return res.status(404).json({ message: "Report not found" });
+      return res.status(404).json({
+        success: false,
+        message: "Report not found",
+      });
     }
+if(report.isCastingReport){
+await Invoice.findByIdAndUpdate(report.rtReportId, { isMailSent: false });}
+else{
+  await Welding.findByIdAndUpdate(report.rtReportId,{ isMailSent: false })
+}
+    // 2️⃣ Delete from DB
+    await UploadReport.findByIdAndDelete(reportId);
 
-    // Delete the file from the folder
-    const filePath = path.join(__dirname, '..', report.filePath); // assuming filePath is stored like: 'uploads/filename.pdf'
-    
-    fs.unlink(filePath, async (err) => {
-      if (err && err.code !== 'ENOENT') {
-        // Don't fail if file not found, but log error
-        console.error("Error deleting file:", err);
-        return res.status(500).json({ message: 'Failed to delete file from folder' });
-      }
-
-      // Delete document from DB
-      await UploadReport.findByIdAndDelete(reportId);
-
-      res.json({ success: true, message: "Report and file deleted successfully" });
+    // 3️⃣ Success response
+    res.status(200).json({
+      success: true,
+      message: `Report (Report No: ${report.reportNo}) deleted successfully`,
     });
 
   } catch (error) {
-    console.error('Delete report error:', error);
-    res.status(500).json({ message: "Server error" });
+    console.error("❌ Delete report error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Server error while deleting report",
+      error: error.message,
+    });
   }
-};
+});
 
 // Run every 5 minutes
 // cron.schedule('*/5 * * * *', async () => {
@@ -224,19 +331,20 @@ cron.schedule('0 0 * * *', async () => {
     const reportsToDelete = await UploadReport.find({ uploadedAt: { $lt: sevenDaysAgo } });
 
     for (const report of reportsToDelete) {
-      const filePath = path.join(__dirname, '..', report.filePath);
+      // const filePath = path.join(__dirname, '..', report.filePath);
 
-      fs.unlink(filePath, async (err) => {
-        if (err && err.code !== 'ENOENT') {
-          console.error(`Failed to delete file for report ${report._id}:`, err);
-        } else {
-          console.log(`File deleted: ${filePath}`);
-        }
+      // fs.unlink(filePath, async (err) => {
+      //   if (err && err.code !== 'ENOENT') {
+      //     console.error(`Failed to delete file for report ${report._id}:`, err);
+      //   } else {
+      //     console.log(`File deleted: ${filePath}`);
+      //   }
 
         // Delete from DB regardless of file deletion success
-        await UploadReport.findByIdAndDelete(report._id);
+       
+      // });
+       await UploadReport.findByIdAndDelete(report._id);
         console.log(`Report deleted: ${report._id}`);
-      });
     }
   } catch (err) {
     console.error('Auto delete error:', err);
