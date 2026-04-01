@@ -3,6 +3,49 @@ const Invoice = require('../models/invoiceModel')
 const User = require('../models/userModel');
 const  UploadReport  = require('../models/uploadReportModel');
 
+function getFinancialYearInfo(now = new Date()) {
+  const year = now.getFullYear();
+  const month = now.getMonth(); // 0=Jan
+
+  // FY starts on Apr 1. If Jan/Feb/Mar => FY started previous calendar year.
+  const startYear = month >= 3 ? year : year - 1;
+  const endYear = startYear + 1;
+
+  const start = new Date(startYear, 3, 1, 0, 0, 0, 0); // Apr 1
+  const end = new Date(endYear, 2, 31, 23, 59, 59, 999); // Mar 31
+
+  const yy1 = String(startYear).slice(-2);
+  const yy2 = String(endYear).slice(-2);
+  const fyLabel = `${yy1}-${yy2}`; // "25-26"
+
+  return { start, end, fyLabel };
+}
+
+async function getMaxSequenceForFY({ Model, start, end, reportNoPrefix, fyLabel }) {
+  const escapedPrefix = reportNoPrefix.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const escapedFy = fyLabel.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const rx = new RegExp(`^${escapedPrefix}/${escapedFy}/`);
+
+  const result = await Model.aggregate([
+    { $match: { createdAt: { $gte: start, $lte: end }, reportNo: { $regex: rx } } },
+    {
+      $project: {
+        seq: {
+          $convert: {
+            input: { $arrayElemAt: [{ $split: ["$reportNo", "/"] }, 2] },
+            to: "int",
+            onError: 0,
+            onNull: 0,
+          },
+        },
+      },
+    },
+    { $group: { _id: null, maxSeq: { $max: "$seq" } } },
+  ]);
+
+  return result?.[0]?.maxSeq || 0;
+}
+
 
 // Get all invoices
 const getInvoices = asyncHandler(async (req, res) => {
@@ -131,33 +174,20 @@ const deleteInvoice = asyncHandler(async (req, res) => {
 
 const getNextReportNo = async (req, res) => {
   try {
-    // Financial year range
-    const start = new Date("2025-04-01");
-    const end = new Date("2026-03-31");
+    const { start, end, fyLabel } = getFinancialYearInfo(new Date());
+    const reportNoPrefix = "STNS_R";
 
-    // Financial year में सारे reports ढूँढो
-    const reports = await Invoice.find({
-      createdAt: { $gte: start, $lte: end }
-    }).select("reportNo");
+    const maxSeq = await getMaxSequenceForFY({
+      Model: Invoice,
+      start,
+      end,
+      reportNoPrefix,
+      fyLabel,
+    });
 
-    let maxSeq = 0;
-
-    if (reports.length > 0) {
-      reports.forEach(r => {
-        const parts = r.reportNo.split("/");
-        const seq = parseInt(parts[2]); // तीसरा हिस्सा number है
-        if (!isNaN(seq) && seq > maxSeq) {
-          maxSeq = seq;
-        }
-      });
-    }
-
-    // Next sequence
     const nextSequence = maxSeq + 1;
-
-    // Format sequence → 01, 02, ...
-    const sequence = nextSequence.toString().padStart(2, "0");
-    const nextReportNo = `STNS_R/25-26/${sequence}`;
+    const sequence = String(nextSequence).padStart(2, "0");
+    const nextReportNo = `${reportNoPrefix}/${fyLabel}/${sequence}`;
 
     res.json({ reportNo: nextReportNo });
   } catch (error) {
