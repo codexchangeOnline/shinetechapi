@@ -343,6 +343,11 @@ cron.schedule('0 0 * * *', async () => {
         // Delete from DB regardless of file deletion success
        
       // });
+      if(report.isCastingReport){
+await Invoice.findByIdAndUpdate(report.rtReportId, { isMailSent: false });}
+else{
+  await Welding.findByIdAndUpdate(report.rtReportId,{ isMailSent: false })
+}
        await UploadReport.findByIdAndDelete(report._id);
         console.log(`Report deleted: ${report._id}`);
     }
