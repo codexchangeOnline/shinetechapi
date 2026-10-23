@@ -16,7 +16,7 @@ const storage = multer.diskStorage({
     cb(null, uploadDir);
   },
   filename: (req, file, cb) => {
-    cb(null, "stamp" + path.extname(file.originalname)); // Always overwrite same file
+    cb(null, "stampcasting" + path.extname(file.originalname)); // Always overwrite same file
   }
 });
 

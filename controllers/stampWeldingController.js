@@ -16,7 +16,7 @@ const storage = multer.diskStorage({
     cb(null, uploadDir);
   },
   filename: (req, file, cb) => {
-    cb(null, "stamp" + path.extname(file.originalname)); // Always overwrite same file
+    cb(null, "stampwelding" + path.extname(file.originalname)); // Always overwrite same file
   }
 });
 
@@ -60,7 +60,7 @@ const getStamp = asyncHandler(async (req, res) => {
   res.status(200).json({
     success: true,
     message: "Stamp found",
-    file: stamp.imageUrl // like /uploads/stamp.jpg
+    file: stamp.imageUrl, // e.g. /uploads/stamp.jpg
   });
 });
 
